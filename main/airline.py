@@ -88,27 +88,61 @@ if __name__ == '__main__':
     #
     # airroute=airroutedf.join(takeoffcount,airroutedf.src_airport==takeoffcount.src_airport,"inner").drop(takeoffcount.src_airport)
     #
-    #
     # airlinedf.join(airroute,airlinedf.airline_id==airroute.airline_id,"inner").select(
-    #     airlinedf.airline_id,"name").distinct().show()
+    #     airlinedf.airline_id,"name").distinct().show(truncate=False)
 
     """
     3. get airport details which has minimum number of takeoffs and landing.
+    """
+    # #finding minimum takeoff
+    # mintake=airroutedf.groupby("src_airport_id").count().withColumnRenamed("count","mintakeoff")
+    # # mintake.show()
+    # m=mintake.agg(min("mintakeoff")).take(1)[0][0]
+    # takeoff=mintake.select("src_airport_id").filter(col("mintakeoff")==m)
+    # # takeoff.show()
+    #
+    # # finding minimum landing
+    # minland = airroutedf.groupby("dest_airport_id").count().withColumnRenamed("count", "minlanding")
+    # # minland.show()
+    # ml = minland.agg(min("minlanding")).take(1)[0][0]
+    # landing = minland.select("dest_airport_id").filter(col("minlanding") == ml)
+    # # landing.show()
+    #
+    # #merge minimum takeoff and minimum landing
+    # takeofflanding=landing.union(takeoff).distinct()
+    # # takeofflanding.show()
+    #
+    # #dispaly airport details which has minimum number of takeoffs and landing
+    # airportdf.join(takeofflanding,airportdf.airline_id==takeofflanding.dest_airport_id,"inner").drop("dest_airport_id").show(truncate=False)
+    #
+    """
     4. get airport details which is having maximum number of takeoff and landing.
     """
-
-    airroutedf.withColumn("mintakeoff", min("src_airport_id").over(Window.partitionBy("src_airport"))).select("airline_id","src_airport_id","src_airport").distinct().show()
-    # airroutedf.select("src_airport_id","src_airport").distinct().withColumn("maxtakeoff", max("src_airport_id").over(Window.partitionBy("src_airport"))).show()
+    # # finding maximum takeoff
+    # maxtake = airroutedf.groupby("src_airport_id").count().withColumnRenamed("count", "maxtakeoff")
+    # # maxtake.show()
+    # mt = maxtake.agg(max("maxtakeoff")).take(1)[0][0]
+    # # print(mt)
+    # mxtakeoff = maxtake.select("src_airport_id").filter(col("maxtakeoff") == mt)
+    # # mxtakeoff.show()
+    #
+    # # finding maximum landing
+    # maxland = airroutedf.groupby("dest_airport_id").count().withColumnRenamed("count", "maxlanding")
+    # # maxland.show()
+    # mxl = maxland.agg(max("maxlanding")).take(1)[0][0]
+    # # print(mxl)
+    # mxlanding = maxland.select("dest_airport_id").filter(col("maxlanding") == mxl)
+    # # mxlanding.show()
+    #
+    # # # merge maximum takeoff and maximum landing
+    # mxtakeofflanding = mxtakeoff.union(mxlanding).distinct()
+    # # mxtakeofflanding.show()
     # #
-    # airroutedf.select("dest_airport_id","dest_airport").distinct().withColumn("minlanding", min("dest_airport_id").over(Window.partitionBy("dest_airport"))).show()
-    # airroutedf.select("dest_airport_id","dest_airport").distinct().withColumn("maxlanding", max("dest_airport_id").over(Window.partitionBy("dest_airport"))).show()
+    # # dispaly airport details which has maximum number of takeoffs and landing
+    # airportdf.join(mxtakeofflanding, airportdf.airline_id == mxtakeofflanding.src_airport_id, "inner").drop(
+    #     "src_airport_id").show(truncate=False)
 
-    # airroutedf.createOrReplaceTempView("airroute")
-    # airlinedf.createOrReplaceTempView("airline")
-    # spark.sql("select ar.airline_id,ar.src_airport_id,count(ar.src_airport_id) from airroute ar,airline al group by ar.airline_id,ar.src_airport_id having count(ar.src_airport_id)>=3").show()
-
-
-    #5. Get the airline details, which is having direct flights. details like airline id, name, source airport name, and destination airport name
+#5. Get the airline details, which is having direct flights. details like airline id, name, source airport name, and destination airport name
     # directfightdf = airroutedf.select("airline_id",col("src_airport").alias("source_airport_name"),col("dest_airport").alias("destination_airport_name")).filter(col("stops") == 0).distinct()
     #
     # airlinedf.select("airline_id","name").join(directfightdf,airlinedf.airline_id==directfightdf.airline_id,"inner").drop(directfightdf.airline_id).sort(desc(airlinedf.airline_id)).show()
